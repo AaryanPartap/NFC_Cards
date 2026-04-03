@@ -17,8 +17,8 @@ After deployment, your NFC links will be:
 1. Push this folder to a GitHub repository.
 2. Go to Netlify -> Add new site -> Import an existing project.
 3. Select your repository.
-4. Build command: leave empty.
-5. Publish directory: `.`
+4. Branch to deploy: `main`.
+5. Netlify will read `netlify.toml` automatically (publish directory is already set to `.`).
 6. Deploy.
 7. Add your custom domain (optional) in Site settings -> Domain management.
 
