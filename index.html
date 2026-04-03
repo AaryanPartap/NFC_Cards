@@ -1,0 +1,58 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>NFC Business Portfolio</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800&family=Space+Grotesk:wght@500;600;700&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="styles.css" />
+</head>
+<body>
+  <div class="bg-orb orb-1" aria-hidden="true"></div>
+  <div class="bg-orb orb-2" aria-hidden="true"></div>
+
+  <main class="app-shell">
+    <section class="card">
+      <header class="card-header">
+        <div>
+          <p class="eyebrow">NFC Business Profiles</p>
+          <h1>Choose a Profile Link</h1>
+          <p class="sub-title">Use one URL per NFC card. Each person has a dedicated profile page.</p>
+          <div class="header-badges" aria-hidden="true">
+            <span>Static hosting ready</span>
+            <span>No personal server needed</span>
+          </div>
+        </div>
+      </header>
+
+      <section class="empty-state">
+        <h2>Profile Links</h2>
+        <p>Write one of the links below on each NFC card.</p>
+      </section>
+
+      <section class="profile-content link-grid">
+        <article class="profile-section link-card">
+          <h3>Mohit Shrivastava</h3>
+          <p>Use this link on Mohit's NFC card.</p>
+          <a class="primary-btn link-btn" href="/person1">Open /person1</a>
+          <p class="link-url">https://your-domain.com/person1</p>
+        </article>
+
+        <article class="profile-section link-card">
+          <h3>Nirmal Arri</h3>
+          <p>Use this link on Nirmal's NFC card.</p>
+          <a class="primary-btn link-btn" href="/person2">Open /person2</a>
+          <p class="link-url">https://your-domain.com/person2</p>
+        </article>
+      </section>
+
+      <section class="empty-state">
+        <h2>Deploy Once, Use Forever</h2>
+        <p>Host this website on Netlify, Vercel, or GitHub Pages. After deployment, the links work even when your laptop is off.</p>
+      </section>
+    </section>
+  </main>
+</body>
+</html>
