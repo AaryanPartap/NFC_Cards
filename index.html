@@ -14,45 +14,117 @@
   <div class="bg-orb orb-2" aria-hidden="true"></div>
 
   <main class="app-shell">
-    <section class="card">
+    <section class="card" id="profileCard">
       <header class="card-header">
-        <div>
-          <p class="eyebrow">NFC Business Profiles</p>
-          <h1>Choose a Profile Link</h1>
-          <p class="sub-title">Use one URL per NFC card. Each person has a dedicated profile page.</p>
-          <div class="header-badges" aria-hidden="true">
-            <span>Static hosting ready</span>
-            <span>No personal server needed</span>
+        <div class="header-content">
+          <div id="profilePhotoContainer" class="profile-photo-container hidden">
+            <img id="displayProfilePhoto" class="profile-photo" alt="Profile" />
+          </div>
+          <div>
+            <p class="eyebrow">NFC Business Profile</p>
+            <h1 id="displayName">Your Name</h1>
+            <p id="displayTitle" class="sub-title">Job Title at Company</p>
+            <div class="header-badges" aria-hidden="true">
+              <span>Live profile</span>
+              <span>Auto-saves locally</span>
+              <span id="cardBadge">Card: default</span>
+              <span id="syncBadge">Server sync: checking</span>
+            </div>
+            <p id="profileLinkHint" class="profile-link-hint"></p>
+            <p id="syncHint" class="sync-hint"></p>
           </div>
         </div>
+        <button id="editBtn" class="primary-btn" type="button">Edit Profile</button>
       </header>
 
-      <section class="empty-state">
-        <h2>Profile Links</h2>
-        <p>Write one of the links below on each NFC card.</p>
+      <section id="emptyState" class="empty-state">
+        <h2>Your profile is currently empty</h2>
+        <p>Tap <strong>Edit Profile</strong> to add your business details for NFC sharing.</p>
       </section>
 
-      <section class="profile-content link-grid">
-        <article class="profile-section link-card">
-          <h3>Mohit Shrivastava</h3>
-          <p>Use this link on Mohit's NFC card.</p>
-          <a class="primary-btn link-btn" href="/person1">Open /person1</a>
-          <p class="link-url">https://your-domain.com/person1</p>
-        </article>
+      <div id="profileContent" class="profile-content hidden">
+        <section class="profile-section" id="aboutSection">
+          <h3>Basic Information</h3>
+          <p id="displayBio"></p>
+          <div class="chip-row" id="displayTags"></div>
+        </section>
 
-        <article class="profile-section link-card">
-          <h3>Nirmal Arri</h3>
-          <p>Use this link on Nirmal's NFC card.</p>
-          <a class="primary-btn link-btn" href="/person2">Open /person2</a>
-          <p class="link-url">https://your-domain.com/person2</p>
-        </article>
-      </section>
+        <section class="profile-section" id="contactSection">
+          <h3>Contact Information</h3>
+          <ul class="detail-list">
+            <li><span>Email</span><a id="displayEmail" href="#"></a></li>
+            <li><span>Phone</span><a id="displayPhone" href="#"></a></li>
+            <li><span>Website</span><a id="displayWebsite" href="#" target="_blank" rel="noreferrer"></a></li>
+            <li><span>Address</span><p id="displayAddress"></p></li>
+          </ul>
+        </section>
 
-      <section class="empty-state">
-        <h2>Deploy Once, Use Forever</h2>
-        <p>Host this website on Netlify, Vercel, or GitHub Pages. After deployment, the links work even when your laptop is off.</p>
-      </section>
+        <section class="profile-section" id="socialSection">
+          <h3>Social Media</h3>
+          <ul class="detail-list">
+            <li><span>LinkedIn</span><a id="displayLinkedIn" href="#" target="_blank" rel="noreferrer"></a></li>
+            <li><span>X / Twitter</span><a id="displayTwitter" href="#" target="_blank" rel="noreferrer"></a></li>
+            <li><span>Instagram</span><a id="displayInstagram" href="#" target="_blank" rel="noreferrer"></a></li>
+            <li><span>YouTube</span><a id="displayYouTube" href="#" target="_blank" rel="noreferrer"></a></li>
+          </ul>
+        </section>
+
+        <section class="profile-section" id="projectsSection">
+          <h3>Projects</h3>
+          <div id="displayProjects" class="projects-grid"></div>
+        </section>
+      </div>
     </section>
   </main>
+
+  <section id="editorPanel" class="editor-panel hidden" aria-label="Profile editor">
+    <div class="editor-header">
+      <h2>Edit Portfolio Profile</h2>
+      <button id="closeEditorBtn" class="text-btn" type="button">Close</button>
+    </div>
+
+    <p class="autosave-note">Auto-saving in real time</p>
+
+    <form id="profileForm" class="editor-grid" novalidate>
+      <fieldset>
+        <legend>Profile Photo</legend>
+        <label>Upload Photo<input name="profilePhoto" id="profilePhotoInput" type="file" accept="image/*,.png,.jpg,.jpeg,.gif,.webp,.bmp,.svg,.heic,.heif,.avif,.tif,.tiff" /></label>
+        <small>Recommended: Square image, at least 200x200px</small>
+      </fieldset>
+
+      <fieldset>
+        <legend>Basic Information</legend>
+        <label>Name<input name="name" type="text" placeholder="Your full name" /></label>
+        <label>Company Name<input name="company" type="text" placeholder="Your company" /></label>
+        <label>Job Title<input name="jobTitle" type="text" placeholder="Founder, Sales Manager, etc." /></label>
+        <label>Bio<textarea name="bio" rows="3" placeholder="What you do and how you help clients"></textarea></label>
+        <label>Business Tags (comma separated)<input name="tags" type="text" placeholder="NFC, Consulting, Retail" /></label>
+      </fieldset>
+
+      <fieldset>
+        <legend>Contact Information</legend>
+        <label>Email<input name="email" type="email" placeholder="name@company.com" /></label>
+        <label>Phone<input name="phone" type="tel" placeholder="+91 90000 00000" /></label>
+        <label>Website<input name="website" type="url" placeholder="https://yourcompany.com" /></label>
+        <label>Address<textarea name="address" rows="2" placeholder="City, State, Country"></textarea></label>
+      </fieldset>
+
+      <fieldset>
+        <legend>Social Media</legend>
+        <label>LinkedIn<input name="linkedin" type="url" placeholder="https://linkedin.com/in/..." /></label>
+        <label>X / Twitter<input name="twitter" type="url" placeholder="https://x.com/..." /></label>
+        <label>Instagram<input name="instagram" type="url" placeholder="https://instagram.com/..." /></label>
+        <label>YouTube<input name="youtube" type="url" placeholder="https://youtube.com/..." /></label>
+      </fieldset>
+
+      <fieldset>
+        <legend>Projects</legend>
+        <div id="projectsList" class="projects-editor"></div>
+        <button id="addProjectBtn" class="add-project-btn" type="button">+ Add Project</button>
+      </fieldset>
+    </form>
+  </section>
+
+  <script src="script.js"></script>
 </body>
 </html>

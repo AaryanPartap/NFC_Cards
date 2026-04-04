@@ -128,12 +128,6 @@ h1 {
   font-weight: 500;
 }
 
-.profile-id-note {
-  margin: 12px 0 0;
-  font-size: 0.84rem;
-  color: var(--muted);
-}
-
 .header-badges {
   display: flex;
   flex-wrap: wrap;
@@ -154,16 +148,25 @@ h1 {
   font-weight: 700;
 }
 
+.profile-link-hint {
+  margin: 10px 0 0;
+  font-size: 0.86rem;
+  color: #4a5774;
+  word-break: break-all;
+}
+
+.sync-hint {
+  margin: 8px 0 0;
+  font-size: 0.84rem;
+  color: #5b6681;
+}
+
 .primary-btn,
 .text-btn {
   border: 0;
   border-radius: 999px;
   cursor: pointer;
   font-family: inherit;
-  text-decoration: none;
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
 }
 
 .primary-btn {
@@ -196,25 +199,6 @@ h1 {
 .empty-state p {
   margin: 0;
   color: var(--muted);
-}
-
-.link-grid {
-  grid-template-columns: repeat(2, minmax(0, 1fr));
-}
-
-.link-card {
-  display: grid;
-  gap: 12px;
-}
-
-.link-btn {
-  width: fit-content;
-}
-
-.link-url {
-  margin: 0;
-  color: var(--muted);
-  font-size: 0.9rem;
 }
 
 .profile-content {
@@ -339,12 +323,6 @@ h1 {
   color: var(--success);
   font-size: 0.9rem;
   font-weight: 700;
-}
-
-.share-link-hint {
-  margin: 8px 20px 0;
-  color: var(--muted);
-  font-size: 0.82rem;
 }
 
 .editor-grid {
@@ -585,10 +563,6 @@ small {
   }
 
   .projects-grid {
-    grid-template-columns: 1fr;
-  }
-
-  .link-grid {
     grid-template-columns: 1fr;
   }
 

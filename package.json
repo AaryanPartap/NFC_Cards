@@ -2,5 +2,14 @@
   "name": "nfc-business-portfolio",
   "private": true,
   "version": "1.0.0",
-  "description": "Static NFC business profile website with two public profile links"
+  "type": "module",
+  "scripts": {
+    "dev": "node server.mjs",
+    "build": "vite build",
+    "preview": "vite preview",
+    "start": "node server.mjs"
+  },
+  "devDependencies": {
+    "vite": "^6.1.0"
+  }
 }
