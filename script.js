@@ -84,37 +84,53 @@ const elements = {
 initialize();
 
 async function initialize() {
+  if (elements.editBtn) {
+    elements.editBtn.addEventListener("click", openEditor);
+  }
+  if (elements.closeEditorBtn) {
+    elements.closeEditorBtn.addEventListener("click", closeEditor);
+  }
+  if (elements.profileForm) {
+    elements.profileForm.addEventListener("input", () => {
+      const next = readFormValues();
+      state.profile = next;
+      persistProfile(next, state.card.storageKey, state.card.id);
+      render(next);
+    });
+  }
+  if (elements.profilePhotoInput) {
+    elements.profilePhotoInput.addEventListener("change", handlePhotoUpload);
+  }
+  if (elements.addProjectBtn) {
+    elements.addProjectBtn.addEventListener("click", addProjectField);
+  }
+
   await hydrateRuntimeInfo();
   state.profile = await loadProfile(state.card.storageKey, state.card.id);
 
-  elements.cardBadge.textContent = `Card: ${state.card.id}`;
+  if (elements.cardBadge) {
+    elements.cardBadge.textContent = `Card: ${state.card.id}`;
+  }
   updateLinkHints();
   updateSyncUi();
 
   bindFormValues(state.profile);
   render(state.profile);
-
-  elements.editBtn.addEventListener("click", openEditor);
-  elements.closeEditorBtn.addEventListener("click", closeEditor);
-
-  elements.profileForm.addEventListener("input", () => {
-    const next = readFormValues();
-    state.profile = next;
-    persistProfile(next, state.card.storageKey, state.card.id);
-    render(next);
-  });
-
-  elements.profilePhotoInput.addEventListener("change", handlePhotoUpload);
-  elements.addProjectBtn.addEventListener("click", addProjectField);
 }
 
 function openEditor() {
+  if (!elements.editorPanel) {
+    return;
+  }
   elements.editorPanel.classList.remove("hidden");
   requestAnimationFrame(() => elements.editorPanel.classList.add("open"));
   renderProjectsEditor();
 }
 
 function closeEditor() {
+  if (!elements.editorPanel) {
+    return;
+  }
   elements.editorPanel.classList.remove("open");
   setTimeout(() => elements.editorPanel.classList.add("hidden"), 240);
 }
@@ -418,6 +434,10 @@ function updateLinkHints() {
     ? `${state.sync.lanBaseUrl}/nfc${encodeURIComponent(state.card.id)}`
     : "";
 
+  if (!elements.profileLinkHint || !elements.syncHint) {
+    return;
+  }
+
   if (isLocalHost() && lanLink) {
     elements.profileLinkHint.textContent = `Write this NFC URL for other devices: ${lanLink}`;
     elements.syncHint.textContent = "You are on localhost. Other devices must use the LAN URL above, not localhost.";
@@ -429,6 +449,10 @@ function updateLinkHints() {
 }
 
 function updateSyncUi() {
+  if (!elements.syncBadge || !elements.syncHint) {
+    return;
+  }
+
   if (state.sync.serverAvailable) {
     elements.syncBadge.textContent = "Server sync: active";
     return;
