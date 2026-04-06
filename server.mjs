@@ -10,7 +10,7 @@ const __dirname = path.dirname(__filename);
 const rootDir = __dirname;
 const dataDir = path.join(rootDir, "data");
 const port = Number(process.env.PORT || 5173);
-const authRequired = String(process.env.FIREBASE_AUTH_REQUIRED || "true") === "true";
+const authRequired = String(process.env.FIREBASE_AUTH_REQUIRED || "false") === "true";
 const allowedEmails = (process.env.ALLOWED_EDITOR_EMAILS || "")
   .split(",")
   .map((v) => v.trim().toLowerCase())
