@@ -45,7 +45,13 @@ const state = {
   },
   sync: {
     serverAvailable: true,
-    lanBaseUrl: ""
+    lanBaseUrl: "",
+    authRequired: false
+  },
+  auth: {
+    firebaseEnabled: false,
+    token: "",
+    userEmail: ""
   },
   profile: { ...defaultProfile }
 };
@@ -78,7 +84,9 @@ const elements = {
   cardBadge: document.getElementById("cardBadge"),
   profileLinkHint: document.getElementById("profileLinkHint"),
   syncBadge: document.getElementById("syncBadge"),
-  syncHint: document.getElementById("syncHint")
+  syncHint: document.getElementById("syncHint"),
+  authBtn: document.getElementById("authBtn"),
+  authStatus: document.getElementById("authStatus")
 };
 
 initialize();
@@ -104,6 +112,9 @@ async function initialize() {
   if (elements.addProjectBtn) {
     elements.addProjectBtn.addEventListener("click", addProjectField);
   }
+  if (elements.authBtn) {
+    elements.authBtn.addEventListener("click", onAuthButtonClick);
+  }
 
   await hydrateRuntimeInfo();
   state.profile = await loadProfile(state.card.storageKey, state.card.id);
@@ -113,6 +124,7 @@ async function initialize() {
   }
   updateLinkHints();
   updateSyncUi();
+  updateAuthUi();
 
   bindFormValues(state.profile);
   render(state.profile);
@@ -404,10 +416,21 @@ async function loadProfile(storageKey, cardId) {
 function persistProfile(profile, storageKey, cardId) {
   localStorage.setItem(storageKey, JSON.stringify(profile));
 
+  const headers = { "Content-Type": "application/json" };
+  if (state.auth.token) {
+    headers.Authorization = `Bearer ${state.auth.token}`;
+  }
+
   fetch(`${PROFILE_API_BASE}/${encodeURIComponent(cardId)}`, {
     method: "PUT",
-    headers: { "Content-Type": "application/json" },
+    headers,
     body: JSON.stringify(profile)
+  }).then((response) => {
+    if (response.status === 401) {
+      state.sync.serverAvailable = true;
+      elements.syncHint.textContent = "Sign in with an allowed editor account to save changes.";
+      updateAuthUi();
+    }
   }).catch(() => {
     state.sync.serverAvailable = false;
     updateSyncUi();
@@ -424,8 +447,78 @@ async function hydrateRuntimeInfo() {
     if (runtime && runtime.lanBaseUrl) {
       state.sync.lanBaseUrl = runtime.lanBaseUrl;
     }
+    state.sync.authRequired = Boolean(runtime && runtime.authRequired);
+
+    if (runtime && runtime.firebaseClientConfig) {
+      await initFirebaseClient(runtime.firebaseClientConfig);
+    }
   } catch {
     // Runtime info is optional.
+  }
+}
+
+async function initFirebaseClient(firebaseClientConfig) {
+  if (!window.firebase || !firebaseClientConfig.apiKey) {
+    return;
+  }
+
+  if (window.firebase.apps.length === 0) {
+    window.firebase.initializeApp(firebaseClientConfig);
+  }
+
+  state.auth.firebaseEnabled = true;
+  const auth = window.firebase.auth();
+  auth.onAuthStateChanged(async (user) => {
+    if (!user) {
+      state.auth.token = "";
+      state.auth.userEmail = "";
+      updateAuthUi();
+      return;
+    }
+
+    state.auth.userEmail = user.email || "";
+    state.auth.token = await user.getIdToken();
+    updateAuthUi();
+  });
+}
+
+async function onAuthButtonClick() {
+  if (!state.auth.firebaseEnabled || !window.firebase) {
+    return;
+  }
+
+  const auth = window.firebase.auth();
+  if (auth.currentUser) {
+    await auth.signOut();
+    return;
+  }
+
+  const provider = new window.firebase.auth.GoogleAuthProvider();
+  await auth.signInWithPopup(provider);
+}
+
+function updateAuthUi() {
+  if (!elements.authBtn || !elements.authStatus || !elements.editBtn) {
+    return;
+  }
+
+  const signedIn = Boolean(state.auth.token);
+  elements.authBtn.textContent = signedIn ? "Sign Out" : "Sign In";
+
+  if (signedIn) {
+    elements.authStatus.textContent = `Editor access: signed in as ${state.auth.userEmail}`;
+  } else if (state.sync.authRequired) {
+    elements.authStatus.textContent = "Editor access: sign in required for saving";
+  } else {
+    elements.authStatus.textContent = "Editor access: open";
+  }
+
+  if (state.sync.authRequired && !signedIn) {
+    elements.editBtn.disabled = true;
+    elements.editBtn.title = "Sign in to edit";
+  } else {
+    elements.editBtn.disabled = false;
+    elements.editBtn.removeAttribute("title");
   }
 }
 

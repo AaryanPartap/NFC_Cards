@@ -97,6 +97,12 @@ body {
   position: relative;
 }
 
+.header-actions {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
 .card-header::after {
   content: "";
   position: absolute;
@@ -167,6 +173,25 @@ h1 {
   border-radius: 999px;
   cursor: pointer;
   font-family: inherit;
+}
+
+.text-btn {
+  background: rgba(255, 255, 255, 0.78);
+  border: 1px solid rgba(91, 106, 138, 0.16);
+  color: #334160;
+  font-weight: 700;
+  padding: 10px 14px;
+}
+
+.text-btn:disabled {
+  opacity: 0.55;
+  cursor: not-allowed;
+}
+
+.auth-status {
+  margin: 12px 30px 0;
+  font-size: 0.84rem;
+  color: #4c5977;
 }
 
 .primary-btn {

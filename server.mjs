@@ -1,5 +1,6 @@
 import { createServer } from "node:http";
 import { mkdir, readFile, stat, writeFile } from "node:fs/promises";
+import admin from "firebase-admin";
 import os from "node:os";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
@@ -9,6 +10,15 @@ const __dirname = path.dirname(__filename);
 const rootDir = __dirname;
 const dataDir = path.join(rootDir, "data");
 const port = Number(process.env.PORT || 5173);
+const authRequired = String(process.env.FIREBASE_AUTH_REQUIRED || "true") === "true";
+const allowedEmails = (process.env.ALLOWED_EDITOR_EMAILS || "")
+  .split(",")
+  .map((v) => v.trim().toLowerCase())
+  .filter(Boolean);
+const allowedDomains = (process.env.ALLOWED_EDITOR_DOMAINS || "")
+  .split(",")
+  .map((v) => v.trim().toLowerCase())
+  .filter(Boolean);
 
 const defaultProfile = {
   name: "",
@@ -44,6 +54,8 @@ const mimeTypes = {
 
 await mkdir(dataDir, { recursive: true });
 
+const firebase = initializeFirebase();
+
 const server = createServer(async (req, res) => {
   const url = new URL(req.url || "/", `http://${req.headers.host}`);
 
@@ -76,13 +88,9 @@ async function handleProfileApi(req, res, pathname) {
     return;
   }
 
-  const profilePath = path.join(dataDir, `${cardId}.json`);
-
   if (req.method === "GET") {
     try {
-      const raw = await readFile(profilePath, "utf8");
-      const parsed = JSON.parse(raw);
-      sendJson(res, 200, { ...defaultProfile, ...parsed });
+      sendJson(res, 200, await readProfile(cardId));
       return;
     } catch {
       sendJson(res, 200, { ...defaultProfile });
@@ -91,10 +99,15 @@ async function handleProfileApi(req, res, pathname) {
   }
 
   if (req.method === "PUT") {
+    const check = await validateEditor(req);
+    if (!check.ok) {
+      sendJson(res, check.status, { error: check.message });
+      return;
+    }
+
     try {
       const body = await readJsonBody(req, 12 * 1024 * 1024);
-      const normalized = { ...defaultProfile, ...(body || {}) };
-      await writeFile(profilePath, JSON.stringify(normalized, null, 2), "utf8");
+      await writeProfile(cardId, body);
       sendJson(res, 200, { ok: true });
       return;
     } catch {
@@ -114,7 +127,14 @@ function handleRuntimeApi(req, res) {
 
   sendJson(res, 200, {
     lanBaseUrl,
-    lanIps
+    lanIps,
+    authRequired,
+    firebaseClientConfig: {
+      apiKey: process.env.FIREBASE_WEB_API_KEY || "",
+      authDomain: process.env.FIREBASE_WEB_AUTH_DOMAIN || "",
+      projectId: process.env.FIREBASE_WEB_PROJECT_ID || "",
+      appId: process.env.FIREBASE_WEB_APP_ID || ""
+    }
   });
 }
 
@@ -173,6 +193,102 @@ async function serveIndex(res) {
     res.end(content);
   } catch {
     sendText(res, 500, "Unable to load app");
+  }
+}
+
+function initializeFirebase() {
+  const projectId = process.env.FIREBASE_PROJECT_ID || "";
+  const clientEmail = process.env.FIREBASE_CLIENT_EMAIL || "";
+  const privateKeyRaw = process.env.FIREBASE_PRIVATE_KEY || "";
+
+  if (!projectId || !clientEmail || !privateKeyRaw) {
+    return { ready: false, db: null, auth: null };
+  }
+
+  const privateKey = privateKeyRaw.replace(/\\n/g, "\n");
+  if (admin.apps.length === 0) {
+    admin.initializeApp({
+      credential: admin.credential.cert({
+        projectId,
+        clientEmail,
+        privateKey
+      })
+    });
+  }
+
+  return {
+    ready: true,
+    db: admin.firestore(),
+    auth: admin.auth()
+  };
+}
+
+async function readProfile(cardId) {
+  if (firebase.ready) {
+    const ref = firebase.db.collection("profiles").doc(cardId);
+    const snap = await ref.get();
+    if (!snap.exists) {
+      return { ...defaultProfile };
+    }
+    return { ...defaultProfile, ...(snap.data() || {}) };
+  }
+
+  const profilePath = path.join(dataDir, `${cardId}.json`);
+  try {
+    const raw = await readFile(profilePath, "utf8");
+    return { ...defaultProfile, ...(JSON.parse(raw) || {}) };
+  } catch {
+    return { ...defaultProfile };
+  }
+}
+
+async function writeProfile(cardId, body) {
+  const normalized = { ...defaultProfile, ...(body || {}) };
+
+  if (firebase.ready) {
+    await firebase.db.collection("profiles").doc(cardId).set(normalized, { merge: true });
+    return;
+  }
+
+  const profilePath = path.join(dataDir, `${cardId}.json`);
+  await writeFile(profilePath, JSON.stringify(normalized, null, 2), "utf8");
+}
+
+async function validateEditor(req) {
+  if (!authRequired) {
+    return { ok: true };
+  }
+
+  if (!firebase.ready) {
+    return { ok: false, status: 503, message: "Firebase auth is required but not configured" };
+  }
+
+  const header = req.headers.authorization || "";
+  if (!header.startsWith("Bearer ")) {
+    return { ok: false, status: 401, message: "Missing bearer token" };
+  }
+
+  try {
+    const token = header.slice(7).trim();
+    const decoded = await firebase.auth.verifyIdToken(token);
+    const email = String(decoded.email || "").toLowerCase();
+
+    if (allowedEmails.length === 0 && allowedDomains.length === 0) {
+      return { ok: true };
+    }
+
+    if (allowedEmails.includes(email)) {
+      return { ok: true };
+    }
+
+    const domain = email.includes("@") ? email.split("@").pop() : "";
+    if (domain && allowedDomains.includes(domain)) {
+      return { ok: true };
+    }
+
+    return { ok: false, status: 403, message: "Editor account not allowed" };
+  } catch {
+    return { ok: false, status: 401, message: "Invalid auth token" };
   }
 }
 
